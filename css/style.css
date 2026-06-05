@@ -41,7 +41,6 @@ button { cursor: pointer; }
   padding: 0 clamp(1.25rem, 4vw, 2.5rem);
 }
 
-/* NAV */
 .nav {
   position: fixed;
   top: 0; left: 0; right: 0;
@@ -111,7 +110,6 @@ button { cursor: pointer; }
   transition: all 0.25s var(--ease);
 }
 
-/* BUTTONS */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -184,7 +182,6 @@ button { cursor: pointer; }
 .btn--sm { padding: 0.5rem 1.25rem; font-size: 0.8125rem; }
 .btn--lg { padding: 0.8rem 2rem; font-size: 0.9375rem; }
 
-/* HERO */
 .hero {
   position: relative;
   min-height: 100vh;
@@ -233,7 +230,6 @@ button { cursor: pointer; }
   flex-wrap: wrap;
 }
 
-/* STATS */
 .stats {
   padding: 5rem 0;
   border-top: 1px solid var(--c-border-light);
@@ -275,7 +271,6 @@ button { cursor: pointer; }
   letter-spacing: 0.02em;
 }
 
-/* SECTION HEADER */
 .section-hd {
   text-align: center;
   margin-bottom: 4rem;
@@ -306,7 +301,6 @@ button { cursor: pointer; }
   margin: 0 auto;
 }
 
-/* SERVICES */
 .services {
   padding: 7rem 0;
 }
@@ -353,7 +347,6 @@ button { cursor: pointer; }
   line-height: 1.75;
 }
 
-/* ABOUT */
 .about {
   padding: 7rem 0;
   background: var(--c-bg-2);
@@ -377,7 +370,6 @@ button { cursor: pointer; }
   margin-top: 1rem;
 }
 
-/* CONTACT */
 .contact {
   padding: 7rem 0;
 }
@@ -470,7 +462,6 @@ button { cursor: pointer; }
   gap: 1.25rem;
 }
 
-/* FOOTER */
 .footer {
   padding: 1rem 0;
   border-top: 1px solid var(--c-border-light);
@@ -494,7 +485,6 @@ button { cursor: pointer; }
   color: var(--c-text-3);
 }
 
-/* ANIMATIONS */
 .reveal {
   opacity: 0;
   transform: translateY(24px);
@@ -510,7 +500,6 @@ button { cursor: pointer; }
 .reveal-d2 { transition-delay: 0.16s; }
 .reveal-d3 { transition-delay: 0.24s; }
 
-/* RESPONSIVE */
 @media (max-width: 900px) {
   .nav__menu {
     display: none;

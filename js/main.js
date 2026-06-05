@@ -1,7 +1,6 @@
 (function () {
   'use strict';
 
-  // Footer year - start from 2026
   var yearEl = document.getElementById('footerYear');
   if (yearEl) {
     var currentYear = Math.max(2026, new Date().getFullYear());
@@ -12,7 +11,6 @@
     }
   }
 
-  // Nav scroll
   var nav = document.getElementById('nav');
   var toggle = document.getElementById('navToggle');
   var menu = document.getElementById('navMenu');
@@ -21,7 +19,6 @@
     nav.classList.toggle('scrolled', window.scrollY > 40);
   }, { passive: true });
 
-  // Mobile menu
   if (toggle && menu) {
     toggle.addEventListener('click', function () {
       toggle.classList.toggle('open');
@@ -37,7 +34,6 @@
     });
   }
 
-  // Reveal on scroll
   var observer = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
       if (e.isIntersecting) {
@@ -51,7 +47,6 @@
     observer.observe(el);
   });
 
-  // Stats counter
   var counterObserver = new IntersectionObserver(function (entries) {
     entries.forEach(function (e) {
       if (e.isIntersecting) {
@@ -75,7 +70,6 @@
     counterObserver.observe(el);
   });
 
-  // Form submit
   window.handleSubmit = function (e) {
     e.preventDefault();
     var btn = e.target.querySelector('button[type="submit"]');
