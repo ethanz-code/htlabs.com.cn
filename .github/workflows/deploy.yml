@@ -1,0 +1,142 @@
+name: Build and Deploy
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: docker.itcox.cn
+  IMAGE_REF: docker.itcox.cn/${{ vars.DEPLOY_IMAGE_NAME || 'portfolios' }}:${{ github.sha }}
+  LATEST_IMAGE_REF: docker.itcox.cn/${{ vars.DEPLOY_IMAGE_NAME || 'portfolios' }}:latest
+  CONTAINER_NAME: ${{ vars.DEPLOY_CONTAINER_NAME || 'portfolios' }}
+  PORT_MAPPING: ${{ vars.DEPLOY_PORT_MAPPING || '10020:80' }}
+
+jobs:
+  deploy:
+    name: Build and deploy image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to registry
+        env:
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+        run: |
+          : "${REGISTRY_USERNAME:?Missing REGISTRY_USERNAME secret}"
+          : "${REGISTRY_PASSWORD:?Missing REGISTRY_PASSWORD secret}"
+
+          printf '%s' "$REGISTRY_PASSWORD" | docker login "$REGISTRY" \
+            -u "$REGISTRY_USERNAME" \
+            --password-stdin
+
+      - name: Build and push image
+        run: |
+          DEPLOYED_AT="$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+
+          DOCKER_BUILDKIT=1 docker build \
+            --platform linux/amd64 \
+            --pull \
+            --build-arg DEPLOYED_AT="$DEPLOYED_AT" \
+            --label org.opencontainers.image.created="$DEPLOYED_AT" \
+            -t "$IMAGE_REF" \
+            -t "$LATEST_IMAGE_REF" \
+            .
+
+          docker push "$IMAGE_REF"
+          docker push "$LATEST_IMAGE_REF"
+
+      - name: Install SSH key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${{ secrets.SSH_PORT || '22' }}" "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Pull image and restart container
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT || '22' }}
+          REGISTRY: ${{ env.REGISTRY }}
+          REGISTRY_USERNAME: ${{ secrets.REGISTRY_USERNAME }}
+          REGISTRY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+          IMAGE_REF: ${{ env.IMAGE_REF }}
+          LATEST_IMAGE_REF: ${{ env.LATEST_IMAGE_REF }}
+          CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
+          PORT_MAPPING: ${{ env.PORT_MAPPING }}
+        run: |
+          encode() {
+            printf '%s' "$1" | base64 -w 0
+          }
+
+          REGISTRY_B64="$(encode "$REGISTRY")"
+          REGISTRY_USERNAME_B64="$(encode "$REGISTRY_USERNAME")"
+          REGISTRY_PASSWORD_B64="$(encode "$REGISTRY_PASSWORD")"
+          IMAGE_REF_B64="$(encode "$IMAGE_REF")"
+          LATEST_IMAGE_REF_B64="$(encode "$LATEST_IMAGE_REF")"
+          CONTAINER_NAME_B64="$(encode "$CONTAINER_NAME")"
+          PORT_MAPPING_B64="$(encode "$PORT_MAPPING")"
+
+          ssh \
+            -i ~/.ssh/deploy_key \
+            -p "$SSH_PORT" \
+            -o StrictHostKeyChecking=yes \
+            -o ServerAliveInterval=30 \
+            -o ServerAliveCountMax=20 \
+            "$SSH_USER@$SSH_HOST" \
+            REGISTRY_B64="$REGISTRY_B64" \
+            REGISTRY_USERNAME_B64="$REGISTRY_USERNAME_B64" \
+            REGISTRY_PASSWORD_B64="$REGISTRY_PASSWORD_B64" \
+            IMAGE_REF_B64="$IMAGE_REF_B64" \
+            LATEST_IMAGE_REF_B64="$LATEST_IMAGE_REF_B64" \
+            CONTAINER_NAME_B64="$CONTAINER_NAME_B64" \
+            PORT_MAPPING_B64="$PORT_MAPPING_B64" \
+            'sh -s' <<'EOF'
+          set -eu
+
+          REGISTRY="$(printf '%s' "$REGISTRY_B64" | base64 -d)"
+          REGISTRY_USERNAME="$(printf '%s' "$REGISTRY_USERNAME_B64" | base64 -d)"
+          REGISTRY_PASSWORD="$(printf '%s' "$REGISTRY_PASSWORD_B64" | base64 -d)"
+          IMAGE_REF="$(printf '%s' "$IMAGE_REF_B64" | base64 -d)"
+          LATEST_IMAGE_REF="$(printf '%s' "$LATEST_IMAGE_REF_B64" | base64 -d)"
+          CONTAINER_NAME="$(printf '%s' "$CONTAINER_NAME_B64" | base64 -d)"
+          PORT_MAPPING="$(printf '%s' "$PORT_MAPPING_B64" | base64 -d)"
+
+          : "${REGISTRY_USERNAME:?Missing REGISTRY_USERNAME secret}"
+          : "${REGISTRY_PASSWORD:?Missing REGISTRY_PASSWORD secret}"
+
+          printf '%s' "$REGISTRY_PASSWORD" | docker login "$REGISTRY" \
+            -u "$REGISTRY_USERNAME" \
+            --password-stdin
+
+          OLD_IMAGE_ID="$(docker inspect --format '{{.Image}}' "$CONTAINER_NAME" 2>/dev/null || true)"
+
+          docker rm -f "$CONTAINER_NAME" 2>/dev/null || true
+          if [ -n "$OLD_IMAGE_ID" ]; then
+            docker image rm "$OLD_IMAGE_ID" 2>/dev/null || true
+          fi
+
+          docker image rm "$IMAGE_REF" "$LATEST_IMAGE_REF" 2>/dev/null || true
+          docker pull "$IMAGE_REF"
+          docker image inspect "$IMAGE_REF" >/dev/null
+
+          docker run -d \
+            --name "$CONTAINER_NAME" \
+            --restart unless-stopped \
+            -p "$PORT_MAPPING" \
+            "$IMAGE_REF"
+
+          docker image prune -f
+          EOF
