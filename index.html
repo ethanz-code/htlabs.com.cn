@@ -60,7 +60,7 @@
   <div class="container">
     <div class="nav__inner">
       <a href="#" class="nav__logo">
-        <img src="images/logo.svg" alt="HTLabs" class="nav__logo-img">
+        <img src="images/logo.png" alt="HTLabs" class="nav__logo-img">
       </a>
       <div class="nav__menu" id="navMenu">
         <a href="#services" class="nav__link">服务</a>
@@ -78,22 +78,33 @@
 <!-- Hero -->
 <section class="hero" id="hero">
   <div class="container">
-    <div class="hero__content">
-      <h1 class="hero__title reveal">
-        数智驱动<br>创新未来
-      </h1>
-      <p class="hero__desc reveal reveal-d1">
-        专注于企业数字化转型咨询、IT技术服务与SaaS产品研发<br>
-        以技术赋能业务，助力企业实现数智化升级
-      </p>
-      <div class="hero__actions reveal reveal-d2">
-        <a href="#contact" class="btn btn--primary btn--lg">预约咨询</a>
-        <a href="#services" class="btn btn--ghost btn--lg">了解服务 →</a>
+    <div class="hero__grid">
+      <div class="hero__content">
+        <p class="hero__eyebrow reveal">HTLabs · 数字化转型服务商</p>
+        <h1 class="hero__title reveal reveal-d1">
+          数智驱动<br>创新未来
+        </h1>
+        <p class="hero__desc reveal reveal-d2">
+          专注于企业数字化转型咨询、IT技术服务与SaaS产品研发，<br>
+          以技术赋能业务，助力企业实现数智化升级。
+        </p>
+        <div class="hero__actions reveal reveal-d3">
+          <a href="#contact" class="btn btn--primary btn--lg">预约咨询</a>
+          <a href="#services" class="btn btn--ghost btn--lg">了解服务 →</a>
+        </div>
+      </div>
+      <div class="hero__visual reveal">
+        <div class="hero__shape"></div>
       </div>
     </div>
   </div>
   <div class="hero__bg"></div>
 </section>
+
+<!-- Walking Peeps -->
+<div class="peeps-wrap">
+  <canvas id="peepsCanvas"></canvas>
+</div>
 
 <!-- Stats -->
 <section class="stats">
@@ -196,27 +207,27 @@
           </div>
         </div>
       </div>
-      <form class="contact__form reveal reveal-d1" id="contactForm" onsubmit="handleSubmit(event)">
+      <div class="contact__form reveal reveal-d1" id="contactForm">
         <div class="form-row">
           <div class="form-group">
             <label>姓名</label>
-            <input type="text" placeholder="您的姓名" required>
+            <input type="text" placeholder="您的姓名" required id="formName">
           </div>
           <div class="form-group">
             <label>电话</label>
-            <input type="tel" placeholder="联系电话" required>
+            <input type="tel" placeholder="联系电话" required id="formPhone">
           </div>
         </div>
         <div class="form-group">
           <label>公司</label>
-          <input type="text" placeholder="公司名称">
+          <input type="text" placeholder="公司名称" id="formCompany">
         </div>
         <div class="form-group">
           <label>需求描述</label>
-          <textarea placeholder="请简要描述您的需求" required></textarea>
+          <textarea placeholder="请简要描述您的需求" required id="formDesc"></textarea>
         </div>
-        <button type="submit" class="btn btn--primary btn--lg" style="width:100%">提交咨询</button>
-      </form>
+        <button type="button" class="btn btn--primary btn--lg" style="width:100%" id="submitBtn">提交咨询</button>
+      </div>
     </div>
   </div>
 </section>
@@ -225,8 +236,8 @@
 <footer class="footer">
   <div class="container">
     <div class="footer__inner">
-      <div class="footer__brand" style="height:40px;overflow:visible;display:flex;align-items:center;">
-        <img src="images/logo.svg" alt="HTLabs" style="width:160px;height:auto;border-radius:8px;">
+      <div class="footer__brand" style="display:flex;align-items:center;height:40px;overflow:hidden;">
+        <img src="images/logo.png" alt="HTLabs" style="width:160px;height:auto;border-radius:8px;transform:translateY(4px);">
       </div>
       <p class="footer__copy">© 2026-<span id="footerYear"></span> htlabs.com.cn</p>
     </div>
@@ -234,5 +245,164 @@
 </footer>
 
 <script src="js/main.js"></script>
+<script src="https://gw.alipayobjects.com/os/k/w6/gsap.min.js"></script>
+<script>
+(function () {
+  var config = {
+    src: 'https://gw.alipayobjects.com/zos/k/46/121.png',
+    rows: 15,
+    cols: 4
+  };
+
+  var canvas = document.getElementById('peepsCanvas');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+
+  var stage = { width: 0, height: 0 };
+  var allPeeps = [];
+  var availablePeeps = [];
+  var crowd = [];
+
+  function randomRange(min, max) { return min + Math.random() * (max - min); }
+  function randomIndex(array) { return randomRange(0, array.length) | 0; }
+  function removeFromArray(array, i) { return array.splice(i, 1)[0]; }
+  function removeItemFromArray(array, item) { return removeFromArray(array, array.indexOf(item)); }
+  function removeRandomFromArray(array) { return removeFromArray(array, randomIndex(array)); }
+  function getRandomFromArray(array) { return array[randomIndex(array) | 0]; }
+
+  function resetPeep(peep) {
+    var direction = Math.random() > 0.5 ? 1 : -1;
+    var offsetY = 100 - 250 * gsap.parseEase('power2.in')(Math.random());
+    var startY = stage.height - peep.height + offsetY;
+    var startX, endX;
+
+    if (direction === 1) {
+      startX = -peep.width;
+      endX = stage.width;
+      peep.scaleX = 1;
+    } else {
+      startX = stage.width + peep.width;
+      endX = 0;
+      peep.scaleX = -1;
+    }
+
+    peep.x = startX;
+    peep.y = startY;
+    peep.anchorY = startY;
+
+    return { startX: startX, startY: startY, endX: endX };
+  }
+
+  function normalWalk(peep, props) {
+    var xDuration = 10;
+    var yDuration = 0.25;
+    var tl = gsap.timeline();
+    tl.timeScale(randomRange(0.5, 1.5));
+    tl.to(peep, { duration: xDuration, x: props.endX, ease: 'none' }, 0);
+    tl.to(peep, {
+      duration: yDuration,
+      repeat: xDuration / yDuration,
+      yoyo: true,
+      y: props.startY - 6
+    }, 0);
+    return tl;
+  }
+
+  function Peep(image, rect) {
+    this.image = image;
+    this.rect = rect;
+    this.width = rect[2];
+    this.height = rect[3];
+    this.drawArgs = [this.image].concat(rect).concat([0, 0, this.width, this.height]);
+    this.x = 0;
+    this.y = 0;
+    this.anchorY = 0;
+    this.scaleX = 1;
+    this.walk = null;
+  }
+
+  Peep.prototype.render = function (ctx) {
+    ctx.save();
+    ctx.translate(this.x, this.y);
+    ctx.scale(this.scaleX, 1);
+    ctx.drawImage.apply(ctx, this.drawArgs);
+    ctx.restore();
+  };
+
+  var img = document.createElement('img');
+  img.onload = init;
+  img.src = config.src;
+
+  function createPeeps() {
+    var rows = config.rows, cols = config.cols;
+    var w = img.naturalWidth, h = img.naturalHeight;
+    var total = rows * cols;
+    var rectW = w / rows;
+    var rectH = h / cols;
+
+    for (var i = 0; i < total; i++) {
+      allPeeps.push(new Peep(img, [
+        (i % rows) * rectW,
+        (i / rows | 0) * rectH,
+        rectW,
+        rectH
+      ]));
+    }
+  }
+
+  function resize() {
+    stage.width = canvas.clientWidth;
+    stage.height = canvas.clientHeight;
+    canvas.width = stage.width * devicePixelRatio;
+    canvas.height = stage.height * devicePixelRatio;
+
+    crowd.forEach(function (peep) { peep.walk.kill(); });
+    crowd.length = 0;
+    availablePeeps.length = 0;
+    availablePeeps.push.apply(availablePeeps, allPeeps);
+    initCrowd();
+  }
+
+  function initCrowd() {
+    while (availablePeeps.length) {
+      addPeepToCrowd().walk.progress(Math.random());
+    }
+  }
+
+  function addPeepToCrowd() {
+    var peep = removeRandomFromArray(availablePeeps);
+    var props = resetPeep(peep);
+    var walk = normalWalk(peep, props);
+    walk.eventCallback('onComplete', function () {
+      removePeepFromCrowd(peep);
+      addPeepToCrowd();
+    });
+    peep.walk = walk;
+    crowd.push(peep);
+    crowd.sort(function (a, b) { return a.anchorY - b.anchorY; });
+    return peep;
+  }
+
+  function removePeepFromCrowd(peep) {
+    removeItemFromArray(crowd, peep);
+    availablePeeps.push(peep);
+  }
+
+  function render() {
+    canvas.width = canvas.width;
+    ctx.save();
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    crowd.forEach(function (peep) { peep.render(ctx); });
+    ctx.restore();
+  }
+
+  function init() {
+    createPeeps();
+    resize();
+    gsap.ticker.add(render);
+    window.addEventListener('resize', resize);
+  }
+})();
+</script>
 </body>
 </html>

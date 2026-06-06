@@ -75,22 +75,56 @@
     counterObserver.observe(el);
   });
 
-  // Form submit
-  window.handleSubmit = function (e) {
-    e.preventDefault();
-    var btn = e.target.querySelector('button[type="submit"]');
-    var orig = btn.textContent;
-    btn.textContent = '提交中...';
-    btn.disabled = true;
-    setTimeout(function () {
-      btn.textContent = '已提交 ✓';
-      btn.style.background = '#059669';
-      e.target.reset();
-      setTimeout(function () {
-        btn.textContent = orig;
-        btn.style.background = '';
-        btn.disabled = false;
-      }, 2500);
-    }, 800);
-  };
+  // 表单提交
+  var FC_ENDPOINT = 'https://htlabs-contact-szcypuzieu.cn-hongkong.fcapp.run';
+  var submitBtn = document.getElementById('submitBtn');
+  if (submitBtn) {
+    submitBtn.addEventListener('click', function () {
+      var name = document.getElementById('formName').value.trim();
+      var phone = document.getElementById('formPhone').value.trim();
+      var desc = document.getElementById('formDesc').value.trim();
+      if (!name || !phone || !desc) return;
+
+      var btn = submitBtn;
+      var orig = btn.textContent;
+      btn.textContent = '提交中...';
+      btn.disabled = true;
+
+      fetch(FC_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Date': new Date().toUTCString()
+        },
+        body: JSON.stringify({
+          name: name,
+          phone: phone,
+          company: document.getElementById('formCompany').value.trim(),
+          desc: desc
+        })
+      }).then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.success) {
+          btn.textContent = '已提交 ✓';
+          btn.style.background = '#059669';
+          document.getElementById('formName').value = '';
+          document.getElementById('formPhone').value = '';
+          document.getElementById('formCompany').value = '';
+          document.getElementById('formDesc').value = '';
+        } else {
+          btn.textContent = '提交失败，请重试';
+          btn.style.background = '#dc2626';
+        }
+      }).catch(function () {
+        btn.textContent = '网络错误，请重试';
+        btn.style.background = '#dc2626';
+      }).finally(function () {
+        setTimeout(function () {
+          btn.textContent = orig;
+          btn.style.background = '';
+          btn.disabled = false;
+        }, 3000);
+      });
+    });
+  }
 })();
