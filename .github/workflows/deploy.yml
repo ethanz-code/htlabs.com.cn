@@ -12,10 +12,10 @@ concurrency:
 
 env:
   REGISTRY: docker.itcox.cn
-  IMAGE_REF: docker.itcox.cn/${{ vars.DEPLOY_IMAGE_NAME || 'portfolios' }}:${{ github.sha }}
-  LATEST_IMAGE_REF: docker.itcox.cn/${{ vars.DEPLOY_IMAGE_NAME || 'portfolios' }}:latest
-  CONTAINER_NAME: ${{ vars.DEPLOY_CONTAINER_NAME || 'portfolios' }}
-  PORT_MAPPING: ${{ vars.DEPLOY_PORT_MAPPING || '10020:8080' }}
+  IMAGE_REF: docker.itcox.cn/${{ vars.DEPLOY_IMAGE_NAME || 'htlabs' }}:${{ github.sha }}
+  LATEST_IMAGE_REF: docker.itcox.cn/${{ vars.DEPLOY_IMAGE_NAME || 'htlabs' }}:latest
+  CONTAINER_NAME: ${{ vars.DEPLOY_CONTAINER_NAME || 'htlabs.com.cn' }}
+  PORT_MAPPING: ${{ vars.DEPLOY_PORT_MAPPING || '10200:8080' }}
 
 jobs:
   deploy:
