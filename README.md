@@ -12,8 +12,8 @@ htlabs/
 ├── js/
 │   └── main.js         # 交互脚本
 ├── images/
-│   ├── logo.png        # Logo
-│   └── favicon.png     # Favicon
+│   ├── logo.webp       # Logo
+│   └── favicon.webp    # Favicon
 ├── sitemap.xml         # SEO 站点地图
 ├── robots.txt          # 搜索引擎爬虫配置
 └── README.md
