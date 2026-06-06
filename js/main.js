@@ -6,7 +6,7 @@
   if (yearEl) {
     var currentYear = Math.max(2026, new Date().getFullYear());
     if (currentYear === 2026) {
-      yearEl.parentElement.innerHTML = '© 2026 htlabs.com.cn';
+      yearEl.parentElement.innerHTML = '© 2026 上海宏途数创科技有限公司 · htlabs.com.cn';
     } else {
       yearEl.textContent = currentYear;
     }
