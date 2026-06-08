@@ -76,7 +76,6 @@ button { cursor: pointer; }
   height: auto;
   border-radius: 8px;
   object-fit: contain;
-  transform: translateY(4px);
 }
 
 .nav__logo-text {
